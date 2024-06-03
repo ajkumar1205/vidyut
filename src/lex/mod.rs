@@ -236,57 +236,62 @@ impl Lexer {
     fn char(&mut self) {
         if self.ended() {
             panic!(
-                "Unterminated character Definition at {}, in line {}",
+                "Unterminated character definition at {}, in line {}",
                 self.current, self.line
             );
         }
+
+        self.advance(); // Move past the initial '
 
         let mut ch = String::new();
-        if self.check("\'") {
-            panic!(
-                "Empty character Definition at {}, in line {}",
-                self.current, self.line
-            );
-        }
+        let current_char = self
+            .source
+            .chars()
+            .nth(self.current)
+            .expect("Unexpected program exit");
 
-        if self.check("\\") {
+        if current_char == '\\' {
             self.advance();
-            if self.check("t") {
-                ch.push('\t');
-            } else if self.check("n") {
-                ch.push('\n');
-            } else if self.check("r") {
-                ch.push('\r');
-            } else if self.check("\\") {
-                ch.push('\\');
-            } else if self.check("\'") {
-                ch.push('\'');
-            } else {
-                panic!(
+            let escape_char = self
+                .source
+                .chars()
+                .nth(self.current)
+                .expect("Unexpected program exit");
+
+            ch.push(match escape_char {
+                't' => '\t',
+                'n' => '\n',
+                'r' => '\r',
+                '\\' => '\\',
+                '\'' => '\'',
+                _ => panic!(
                     "Unknown escape character at {}, in line {}",
                     self.current, self.line
-                );
-            }
+                ),
+            });
         } else {
-            self.advance();
-            ch.push(
-                self.source
-                    .chars()
-                    .nth(self.current)
-                    .expect("Unexpected Program Exit"),
-            );
+            ch.push(current_char);
         }
 
-        if self.check("\'") {
-            self.advance();
-            self.tokens
-                .push(Token::new(&ch, TokenType::CharLiteral, self.line));
-        } else {
+        self.advance(); // Move past the character or escape sequence
+
+        if self
+            .source
+            .chars()
+            .nth(self.current)
+            .expect("Unexpected program exit")
+            != '\''
+        {
             panic!(
-                "Unterminated character Definition at {}, in line {}",
+                "Unterminated character definition at {}, in line {}",
                 self.current, self.line
             );
         }
+
+        self.advance(); // Move past the closing '
+
+        self.tokens
+            .push(Token::new(&ch, TokenType::CharLiteral, self.line));
     }
 
     /// `string` `fn` deals with the string literals in the language.
@@ -294,30 +299,54 @@ impl Lexer {
     /// If encounter `"` `string` is called.
     fn string(&mut self) {
         let mut s = String::new();
+        self.advance(); // Move past the initial "
+
         while !self.ended() {
-            self.advance();
-            if self
+            let current_char = self
                 .source
                 .chars()
                 .nth(self.current)
-                .expect("Unexpected Program Exit")
-                == '"'
-            {
+                .expect("Unexpected program exit");
+
+            if current_char == '"' {
                 break;
             }
-            s.push(
-                self.source
+
+            if current_char == '\\' {
+                self.advance();
+                let escape_char = self
+                    .source
                     .chars()
                     .nth(self.current)
-                    .expect("Unexpected Program Exit"),
-            );
+                    .expect("Unexpected program exit");
+
+                s.push(match escape_char {
+                    't' => '\t',
+                    'n' => '\n',
+                    'r' => '\r',
+                    '\\' => '\\',
+                    '"' => '"',
+                    _ => panic!(
+                        "Unknown escape sequence at {}, in line {}",
+                        self.current, self.line
+                    ),
+                });
+            } else {
+                s.push(current_char);
+            }
+
+            self.advance();
         }
+
         if self.ended() {
             panic!(
-                "Unterminated string Definition at {}, in line {}",
+                "Unterminated string definition at {}, in line {}",
                 self.current, self.line
             );
         }
+
+        self.advance(); // Move past the closing "
+
         self.tokens
             .push(Token::new(&s, TokenType::StringLiteral, self.line));
     }
