@@ -1,7 +1,7 @@
-use std::{env, process::exit};
-use std::result::Result;
-
 mod lex;
+use lex::Lexer;
+use std::result::Result;
+use std::{env, process::exit};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = env::args().collect::<Vec<String>>();
@@ -19,11 +19,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let content = std::fs::read_to_string(file)?;
 
-    println!("Content: \n{}", content);
+    let mut lexer = Lexer::new(content);
+    lexer.parse();
 
+    println!("{:?}", lexer.tokens);
     Ok(())
 }
 
-fn help(){
+fn help() {
     println!("Help is here");
 }
