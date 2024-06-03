@@ -1,3 +1,4 @@
+use colored::Colorize;
 use std::collections::{HashMap, HashSet};
 
 #[derive(Debug)]
@@ -82,6 +83,8 @@ impl Lexer {
                     self.advance();
                 }
                 "/" => {
+                    // Comment Handling is yet to be implemented
+                    // Check for the next character and if it is / then handle comment.
                     self.tokens.push(Token::new(s, TokenType::Slash, self.line));
                     self.advance();
                 }
@@ -182,7 +185,7 @@ impl Lexer {
                 "\"" => {
                     self.string();
                 }
-                "'" => {
+                "\'" => {
                     self.char();
                 }
                 " " | "\t" | "\r" => {
@@ -196,7 +199,9 @@ impl Lexer {
                     panic!("Unexpected character: {}", s);
                 }
             }
-            println!("{:?}", self.tokens);
+
+            print!("{}[2J", 27 as char);
+            self.printTokens();
         }
         self.tokens.push(Token::new("", TokenType::Eof, self.line));
     }
@@ -235,33 +240,50 @@ impl Lexer {
                 self.current, self.line
             );
         }
+
         let mut ch = String::new();
+        if self.check("\'") {
+            panic!(
+                "Empty character Definition at {}, in line {}",
+                self.current, self.line
+            );
+        }
+
         if self.check("\\") {
             self.advance();
-            ch.push('\\');
-        } else {
-            let c = self
-                .source
-                .chars()
-                .nth(self.current + 1)
-                .expect("Unexpected Program Exit");
-            if c == '\'' {
+            if self.check("t") {
+                ch.push('\t');
+            } else if self.check("n") {
+                ch.push('\n');
+            } else if self.check("r") {
+                ch.push('\r');
+            } else if self.check("\\") {
+                ch.push('\\');
+            } else if self.check("\'") {
+                ch.push('\'');
+            } else {
                 panic!(
-                    "Empty character definition at {}, in line {}",
+                    "Unknown escape character at {}, in line {}",
                     self.current, self.line
                 );
             }
-            ch.push(c);
+        } else {
+            self.advance();
+            ch.push(
+                self.source
+                    .chars()
+                    .nth(self.current)
+                    .expect("Unexpected Program Exit"),
+            );
         }
 
-        if self.check("'") {
+        if self.check("\'") {
             self.advance();
             self.tokens
                 .push(Token::new(&ch, TokenType::CharLiteral, self.line));
         } else {
             panic!(
-                "Char can contain only one alphabet at a time
-                Unterminated character Definition at {}, in line {}",
+                "Unterminated character Definition at {}, in line {}",
                 self.current, self.line
             );
         }
@@ -371,6 +393,7 @@ impl Lexer {
             ("bool", TokenType::Bool),
             ("byte", TokenType::Byte),
             ("char", TokenType::Char),
+            ("String", TokenType::String),
         ]);
         let mut id = String::new();
         while !self.ended() {
@@ -395,6 +418,62 @@ impl Lexer {
         } else {
             self.tokens
                 .push(Token::new(&id, TokenType::Identifier, self.line));
+        }
+    }
+
+    fn printTokens(&self) {
+        for token in self.tokens.iter() {
+            match token.token_type {
+                TokenType::Identifier => {
+                    println!(
+                        "{}: {}",
+                        token.token_type.to_string().green(),
+                        token.lexeme.green().bold()
+                    );
+                }
+                TokenType::NumberLiteral => {
+                    println!(
+                        "{}: {}",
+                        token.token_type.to_string().yellow(),
+                        token.lexeme.yellow().bold()
+                    );
+                }
+                TokenType::StringLiteral | TokenType::CharLiteral => {
+                    println!(
+                        "{}: {}",
+                        token.token_type.to_string().red(),
+                        token.lexeme.red().bold()
+                    );
+                }
+                TokenType::LeftBrace | TokenType::RightBrace => {
+                    println!(
+                        "{}: {}",
+                        token.token_type.to_string().yellow(),
+                        token.lexeme.yellow().bold()
+                    );
+                }
+                TokenType::LeftBracket | TokenType::RightBracket => {
+                    println!(
+                        "{}: {}",
+                        token.token_type.to_string().red(),
+                        token.lexeme.red().bold()
+                    );
+                }
+                TokenType::LeftParen | TokenType::RightParen => {
+                    println!(
+                        "{}: {}",
+                        token.token_type.to_string().green(),
+                        token.lexeme.green().bold()
+                    );
+                }
+                _ => {
+                    println!(
+                        "{}: {}",
+                        token.token_type.to_string().purple(),
+                        token.lexeme.purple().bold()
+                    );
+                }
+            }
         }
     }
 }
@@ -572,6 +651,89 @@ pub enum TokenType {
     Byte,
     /// `char`
     Char,
+    /// String
+    String,
     /// End of File
     Eof,
+}
+
+impl std::fmt::Display for TokenType {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            TokenType::Identifier => write!(f, "Identifier"),
+            TokenType::Equal => write!(f, "Equal"),
+            TokenType::EqualEqual => write!(f, "EqualEqual"),
+            TokenType::Less => write!(f, "Less"),
+            TokenType::LessEqual => write!(f, "LessEqual"),
+            TokenType::Greater => write!(f, "Greater"),
+            TokenType::GreaterEqual => write!(f, "GreaterEqual"),
+            TokenType::Arrow => write!(f, "Arrow"),
+            TokenType::Plus => write!(f, "Plus"),
+            TokenType::Minus => write!(f, "Minus"),
+            TokenType::Star => write!(f, "Star"),
+            TokenType::Slash => write!(f, "Slash"),
+            TokenType::Percent => write!(f, "Percent"),
+            TokenType::Bang => write!(f, "Bang"),
+            TokenType::Dot => write!(f, "Dot"),
+            TokenType::Comma => write!(f, "Comma"),
+            TokenType::Semicolon => write!(f, "Semicolon"),
+            TokenType::Colon => write!(f, "Colon"),
+            TokenType::Question => write!(f, "Question"),
+            TokenType::LeftParen => write!(f, "LeftParen"),
+            TokenType::RightParen => write!(f, "RightParen"),
+            TokenType::LeftBrace => write!(f, "LeftBrace"),
+            TokenType::RightBrace => write!(f, "RightBrace"),
+            TokenType::LeftBracket => write!(f, "LeftBracket"),
+            TokenType::RightBracket => write!(f, "RightBracket"),
+            TokenType::LeftAssign => write!(f, "LeftAssign"),
+            TokenType::RightAssign => write!(f, "RightAssign"),
+            TokenType::Pipe => write!(f, "Pipe"),
+            TokenType::Caret => write!(f, "Caret"),
+            TokenType::Ampersand => write!(f, "Ampersand"),
+            TokenType::LeftShift => write!(f, "LeftShift"),
+            TokenType::RightShift => write!(f, "RightShift"),
+            TokenType::StringLiteral => write!(f, "StringLiteral"),
+            TokenType::CharLiteral => write!(f, "CharLiteral"),
+            TokenType::NumberLiteral => write!(f, "NumberLiteral"),
+            TokenType::Void => write!(f, "Void"),
+            TokenType::Main => write!(f, "Main"),
+            TokenType::Let => write!(f, "Let"),
+            TokenType::Const => write!(f, "Const"),
+            TokenType::If => write!(f, "If"),
+            TokenType::Else => write!(f, "Else"),
+            TokenType::While => write!(f, "While"),
+            TokenType::Return => write!(f, "Return"),
+            TokenType::Break => write!(f, "Break"),
+            TokenType::Continue => write!(f, "Continue"),
+            TokenType::In => write!(f, "In"),
+            TokenType::Match => write!(f, "Match"),
+            TokenType::Struct => write!(f, "Struct"),
+            TokenType::Enum => write!(f, "Enum"),
+            TokenType::Impl => write!(f, "Impl"),
+            TokenType::True => write!(f, "True"),
+            TokenType::False => write!(f, "False"),
+            TokenType::Goto => write!(f, "Goto"),
+            TokenType::Label => write!(f, "Label"),
+            TokenType::Mut => write!(f, "Mut"),
+            TokenType::Pub => write!(f, "Pub"),
+            TokenType::And => write!(f, "And"),
+            TokenType::Or => write!(f, "Or"),
+            TokenType::Not => write!(f, "Not"),
+            TokenType::I8 => write!(f, "I8"),
+            TokenType::I16 => write!(f, "I16"),
+            TokenType::I32 => write!(f, "I32"),
+            TokenType::I64 => write!(f, "I64"),
+            TokenType::F32 => write!(f, "F32"),
+            TokenType::F64 => write!(f, "F64"),
+            TokenType::U8 => write!(f, "U8"),
+            TokenType::U16 => write!(f, "U16"),
+            TokenType::U32 => write!(f, "U32"),
+            TokenType::U64 => write!(f, "U64"),
+            TokenType::Bool => write!(f, "Bool"),
+            TokenType::Byte => write!(f, "Byte"),
+            TokenType::Char => write!(f, "Char"),
+            TokenType::String => write!(f, "String"),
+            TokenType::Eof => write!(f, "Eof"),
+        }
+    }
 }
