@@ -1,4 +1,5 @@
 mod lex;
+mod error;
 use lex::Lexer;
 use std::result::Result;
 use std::{env, process::exit};
@@ -21,6 +22,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut lexer = Lexer::new(content);
     lexer.parse();
+
+
 
     println!("{:?}", lexer.tokens);
     Ok(())

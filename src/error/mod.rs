@@ -1,5 +1,5 @@
 
-use lex::Token;
+use crate::lex::Token;
 
 trait Error {
     fn error(&self, message: &str);

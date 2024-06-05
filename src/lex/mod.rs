@@ -199,9 +199,9 @@ impl Lexer {
                     panic!("Unexpected character: {}", s);
                 }
             }
-
-            print!("{}[2J", 27 as char);
-            self.printTokens();
+            // Uncomment for token printing
+            // print!("{}[2J", 27 as char);
+            // self.printTokens();
         }
         self.tokens.push(Token::new("", TokenType::Eof, self.line));
     }
@@ -511,7 +511,7 @@ impl Lexer {
 pub struct Token {
     lexeme: String,
     token_type: TokenType,
-    line: usize,
+    pub line: usize,
 }
 
 impl Token {
