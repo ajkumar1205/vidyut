@@ -2,26 +2,46 @@
 ### The Grammar of the language is roughly given below
 
 
-`ProgramFile` => `(ImportDecl)*` `(Decl)*` `MainFn` `(Decl)*`
+`ProgramFile` => `ImportDeclList` `DeclList` `MainFn` `DeclList`
 
-`Decl` => `(StructDecl)*` | `(EnumDecl)*` | `(ImplDecl)*` | `(FnDecl)*`
+`DeclList` => `Decl` `DeclList` | `null`
 
-`ImportDecl` => |Not yet Decided|
+`Decl` => `StructDeclList` | `EnumDeclList` | `ImplDeclList` | `FnDeclList`
 
-`StructDecl` => `AccessDecl` struct `ID` { `(StructTypeDecl)*` }
+`StructDeclList` => `StructDecl` `StructDeclList` | `null`
 
-`StructTypeDecl` => `(AccessDecl Type ID,)*`
+`EnumDeclList` => `EnumDecl` `EnumDeclList` | `null`
+
+`ImplDeclList` => `ImplDecl` `ImplDeclList` | `null`
+
+`FuncDeclList` => `FuncDecl` `FuncDeclList` | `null`
+
+`ImportDeclList` => `ImportDecl` `ImportDeclList` | `null`
+
+`StructDecl` => `AccessDecl` struct `ID` { `StructTypeDeclList` }
+
+`StructTypeDeclList` => `AccessDecl` `Type` `ID`, `StructTypeDeclList` | `null`
 
 `AccessDecl` => pub | `null`
 
-`EnumDecl` =>  `AccessDecl` enum `ID` { `(ID,)*` }
+`EnumDecl` =>  `AccessDecl` enum `ID` { `EnumTypeDeclList` }
 
-`ImplDecl` => impl `ID` { `(FnDecl)*` }
+`EnumTypeDeclList` => `ID`, `EnumTypeDeclList` | `null`
 
-`FnDecl` => `Type` `ID` (`(FnTypeDecl),*`){`(CompoundDecl)*`}
+`ImplDecl` => impl `ID` { `FnDeclList` }
 
-`MainFn` => void main(){ | `(CompoundDecl)*` | }
+`FnDeclList` => `FnDecl` `FnDeclList` | `null`
 
-`CompoundDecl` => `(VariableDecl)*` |  `ConditionalStm` | `LoopStm` 
+`FnDecl` => `Type` `ID` (`FnTypeDeclList`){ `CompoundDeclList` }
 
+`FnTypeDeclList` => `FnTypeDecl`, `FnTypeDeclList` | `null`
 
+`MainFn` => void main(){  `CompoundDeclList` }
+
+`CompoundDeclList` => `VarConLoopDecl` `CompoundDeclList` | `null`
+
+`VarConLoopDecl` => `VariableDeclList` |  `ConditionalStm` | `LoopStm`
+
+`VariableDeclList` => `VariableDecl` `VariableDeclList` | `null`
+
+`VariableDecl` => let `ID`: `Type`
