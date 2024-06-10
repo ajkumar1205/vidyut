@@ -89,7 +89,13 @@ impl Lexer {
                     self.advance();
                 }
                 "*" => {
-                    self.tokens.push(Token::new(s, TokenType::Star, self.line));
+                    if self.check("*") {
+                        self.tokens
+                            .push(Token::new("**", TokenType::Power, self.line));
+                        self.advance();
+                    } else {
+                        self.tokens.push(Token::new(s, TokenType::Star, self.line));
+                    }
                     self.advance();
                 }
                 "%" => {
@@ -586,6 +592,8 @@ pub enum TokenType {
     RightAssign,
     /// `|`
     Pipe,
+    /// **
+    Power,
     /// `^`
     Caret,
     /// `&`
@@ -700,6 +708,7 @@ impl std::fmt::Display for TokenType {
             TokenType::Plus => write!(f, "Plus"),
             TokenType::Minus => write!(f, "Minus"),
             TokenType::Star => write!(f, "Star"),
+            TokenType::Power => write!(f, "Power"),
             TokenType::Slash => write!(f, "Slash"),
             TokenType::Percent => write!(f, "Percent"),
             TokenType::Bang => write!(f, "Bang"),
