@@ -40,8 +40,11 @@
 
 `CompoundDeclList` => `VarConLoopDecl` `CompoundDeclList` | `null`
 
-`VarConLoopDecl` => `VariableDeclList` |  `ConditionalStm` | `LoopStm`
+`VarConLoopDecl` => `VariableDeclList` | `VariableInitList` |  `ConditionalStm` | `LoopStm` | 
+
+`VariableInitList` => `VariableInit` `VariableInitList` | `null`
 
 `VariableDeclList` => `VariableDecl` `VariableDeclList` | `null`
 
-`VariableDecl` => let `ID`: `Type`
+`VariableDecl` => let `ID`: `Type`;
+
