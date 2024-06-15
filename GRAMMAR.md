@@ -36,7 +36,7 @@
 
 `FnTypeDeclList` => `FnTypeDecl`, `FnTypeDeclList` | `null`
 
-`MainFn` => void main(){  `CompoundDeclList` }
+`MainFn` => `AccessDecl` void main(){  `CompoundDeclList` }
 
 `CompoundDeclList` => `VarConLoopDecl` `CompoundDeclList` | `null`
 
@@ -46,5 +46,10 @@
 
 `VariableDeclList` => `VariableDecl` `VariableDeclList` | `null`
 
-`VariableDecl` => let `ID`: `Type`;
+`VariableDecl` => let `MutDecl` `ID`: `Type`;
 
+`MutDecl` => mut | `null`
+
+`VariableInit` => let `MutDecl` `ArrowAsign` `Expression`;
+
+`ArrowAsign`
