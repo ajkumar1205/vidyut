@@ -52,4 +52,4 @@
 
 `VariableInit` => let `MutDecl` `ArrowAsign` `Expression`;
 
-`ArrowAsign`
+`ArrowAsign` => <- | `null`
